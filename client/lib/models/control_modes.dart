@@ -1,0 +1,4 @@
+enum ControlModes {
+  keyboard,
+  mouse
+}

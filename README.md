@@ -1,6 +1,6 @@
 ### Windows Controller
 
-A basic client (cross platform built with Flutter, with a focus on Android app), and server (Rust), which allow a user to send keyboard events to control a Windows machine.
+A basic client (cross platform built with Flutter, with a focus on Android app), and server (Rust), which allow a user to send keyboard events over TCP to control a Windows machine.
 
 Currently the functionality is (very) limited to a few keys that I personally use for controlling playback in MPV from my phone.
 

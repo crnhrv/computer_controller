@@ -1,3 +1,5 @@
+use std::mem::size_of;
+use std::os::raw::c_int;
 use std::{
     error::Error,
     io::{self, BufReader, Read},
@@ -5,7 +7,10 @@ use std::{
 };
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use winapi::um::winuser::keybd_event;
+use winapi::shared::minwindef::WORD;
+use winapi::um::winuser::{
+    INPUT_u, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, LPINPUT,
+};
 
 pub struct WindowsControlHandler {}
 
@@ -14,8 +19,28 @@ impl WindowsControlHandler {
         WindowsControlHandler {}
     }
 
-    fn handle_keypress(&self, key: u8) -> Result<(), Box<dyn Error>> {
-        unsafe { keybd_event(key, 0, 0, 0) };
+    fn handle_keypress(&self, flags: u32, key: u8) -> Result<(), Box<dyn Error>> {
+        let keybd = KEYBDINPUT {
+            wVk: key as WORD,
+            wScan: 0,
+            dwFlags: flags,
+            time: 0,
+            dwExtraInfo: 0,
+        };
+
+        let mut input_u: INPUT_u = unsafe { std::mem::zeroed() };
+
+        unsafe {
+            *input_u.ki_mut() = keybd;
+        }
+
+        let mut input = INPUT {
+            type_: INPUT_KEYBOARD,
+            u: input_u,
+        };
+
+        unsafe { SendInput(1, &mut input as LPINPUT, size_of::<INPUT>() as c_int) };
+
         Ok(())
     }
 
@@ -29,7 +54,11 @@ impl WindowsControlHandler {
             let _payload_buf = vec![0u8; payload_size];
 
             match header.mode {
-                WindowsControlMode::Keypress => &self.handle_keypress(buf_reader.read_u8()?),
+                WindowsControlMode::Keypress => {
+                    let key = buf_reader.read_u8()?;
+                    self.handle_keypress(0, key)?;
+                    self.handle_keypress(KEYEVENTF_KEYUP, key)?;
+                }
                 WindowsControlMode::MouseClick => todo!(),
                 WindowsControlMode::MouseMovement => todo!(),
             };

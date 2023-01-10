@@ -15,7 +15,11 @@ pub fn start_server(port: u16, address: &str) -> Result<(), Box<dyn Error>> {
         let stream = stream.unwrap();
         let control_handler = WindowsControlHandler::new();
         pool.execute(move || {
-            control_handler.handle_connection(stream).unwrap();
+            let result = control_handler.handle_connection(stream);
+            match result {
+                Ok(_) => (),
+                Err(_) => println!("Connection closed abruptly"),
+            };
         })
     }
 

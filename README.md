@@ -12,5 +12,5 @@ This is primarily a personal development project & I don't expect anyone to use 
     2. All typical keyboard key support/custom keys
     3. Key sequence support (e.g. CTRL+{key})
     4. Mouse control support
-	5. Client doesn't actually store server addresses currently
+	~5. Client doesn't actually store server addresses currently~
     6. Ditch Flutter and have native Android support

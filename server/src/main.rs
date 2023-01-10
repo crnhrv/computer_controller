@@ -9,7 +9,7 @@ pub mod windows_control_handler;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Address to bind the server to
-    #[arg(short, long, default_value = "127.0.0.1")]
+    #[arg(short, long, default_value = "192.168.0.16")]
     address: String,
 
     /// Port to bind the server to

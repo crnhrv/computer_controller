@@ -53,10 +53,17 @@ class _WindowsControllerState extends State<WindowsController>
     if (state == AppLifecycleState.resumed) onOpen();
   }
 
-  void onOpen() async {
+  Future<void> onOpen() async {
+    final SharedPreferences prefs = await _prefs;
     if (_selectedServer != null) {
       if (!await _selectedServer!.tryConnect()) {
-        _selectedServer = null;
+        setState(() {
+          _selectedServer = null;
+          _selectedServerIndex =
+              prefs.setInt('selectedServerIndex', -1).then((bool success) {
+                return -1;
+              });
+        });
       }
     }
   }
@@ -138,7 +145,6 @@ class _WindowsControllerState extends State<WindowsController>
   Future<List<Widget>> _buildServerMenu() async {
     final tcpServerMetaData = await _tcpServerMetaData;
     final selectedServerIndex = await _selectedServerIndex;
-
 
     List<Widget> menu = List<Widget>.generate(
         tcpServerMetaData.length,

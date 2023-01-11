@@ -267,6 +267,7 @@ class _WindowsControllerState extends State<WindowsController>
     final tcpServer = TcpServer(port: port, ipAddress: ip);
 
     final SharedPreferences prefs = await _prefs;
+    _selectedServer?.closeConnection();
     if (await tcpServer.tryConnect()) {
       setState(() {
         _selectedServer = tcpServer;
@@ -293,6 +294,8 @@ class _WindowsControllerState extends State<WindowsController>
     });
 
     if (selectedServerIndex == index) {
+      _selectedServer?.closeConnection();
+      
       setState(() {
         _selectedServer = null;
         _selectedServerIndex =

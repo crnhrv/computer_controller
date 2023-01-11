@@ -68,10 +68,16 @@ class _WindowsControllerState extends State<WindowsController>
     }
   }
 
-  Future<void> addServer(TcpServer server) async {
+  Future<bool> addServer(TcpServer server) async {
     final SharedPreferences prefs = await _prefs;
     List<String> tcpServers = await _tcpServerMetaData;
-    tcpServers.add("${server.ipAddress}:${server.port}");
+    final String serverData = "${server.ipAddress}:${server.port}";
+
+    if (tcpServers.contains(serverData)) {
+      return false;
+    }
+
+    tcpServers.add(serverData);
 
     setState(() {
       {
@@ -86,6 +92,8 @@ class _WindowsControllerState extends State<WindowsController>
     if (selectedServerIndex == -1) {
       _setSelectedServer(Future<int>(() => 0));
     }
+
+    return true;
   }
 
   void sendKeyCommand(int keyCommand) {

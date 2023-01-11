@@ -33,7 +33,7 @@ class _CreateServerDialogState extends State<CreateServerDialog> {
     }
   }
 
-  void _tryAddServer(BuildContext context, Function setState) {
+    void _tryAddServer(BuildContext context, Function setState) {
     setState(() {
       _statusText = "Connecting....";
     });
@@ -44,12 +44,23 @@ class _CreateServerDialogState extends State<CreateServerDialog> {
       });
     }
 
-    onSuccess() {
-      setState(() {
-        widget.addServer(_createdServer!);
-        Navigator.of(context).pop();
-        _createdServer = null;
-      });
+    onSuccess() async  {
+      if (await widget.addServer(_createdServer!)) {
+        setState(() {
+          {
+            Navigator.of(context).pop();
+            _createdServer = null;
+          }
+        });
+      } else {
+        _createdServer?.closeConnection();
+        setState(() {
+          {
+            _statusText = "Server already exists";
+            _createdServer = null;
+          }
+        });
+      }
     }
 
     _addServer(context, setState, onSuccess, onFailure);

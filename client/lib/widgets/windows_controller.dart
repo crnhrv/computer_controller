@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -23,12 +24,14 @@ class _WindowsControllerState extends State<WindowsController>
   late Future<List<String>> _tcpServerMetaData;
   late Future<int> _selectedServerIndex;
   late ControlModes _controlMode = ControlModes.keyboard;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
+    _timer = Timer.periodic(
+        const Duration(seconds: 1), (Timer t) => _connectionHealthCheck());
     _selectedServerIndex = _prefs.then((SharedPreferences prefs) {
       return prefs.getInt('selectedServerIndex') ?? -1;
     });
@@ -45,6 +48,7 @@ class _WindowsControllerState extends State<WindowsController>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -53,11 +57,12 @@ class _WindowsControllerState extends State<WindowsController>
     if (state == AppLifecycleState.resumed) onOpen();
   }
 
-  Future<void> onOpen() async {
+  Future<void> _connectionHealthCheck() async {
     final SharedPreferences prefs = await _prefs;
     if (_selectedServer != null && !_selectedServer!.isConnected()) {
       if (!await _selectedServer!.tryConnect()) {
         setState(() {
+          debugPrint("setting server to null");
           _selectedServer = null;
           _selectedServerIndex =
               prefs.setInt('selectedServerIndex', -1).then((bool success) {
@@ -66,6 +71,10 @@ class _WindowsControllerState extends State<WindowsController>
         });
       }
     }
+  }
+
+  Future<void> onOpen() async {
+    await _connectionHealthCheck();
   }
 
   Future<bool> addServer(TcpServer server) async {
@@ -259,13 +268,28 @@ class _WindowsControllerState extends State<WindowsController>
   }
 
   Future<void> _setSelectedServer(Future<int> possibleIndex) async {
+    final SharedPreferences prefs = await _prefs;
     final index = await possibleIndex;
     if (index == -1) {
+      setState(() {
+        _selectedServer = null;
+        _selectedServerIndex =
+            prefs.setInt('selectedServerIndex', -1).then((bool success) {
+              return -1;
+            });
+      });
       return;
     }
 
     final metadata = await _tcpServerMetaData;
     if (metadata.isEmpty) {
+      setState(() {
+        _selectedServer = null;
+        _selectedServerIndex =
+            prefs.setInt('selectedServerIndex', -1).then((bool success) {
+              return -1;
+            });
+      });
       return;
     }
 
@@ -274,12 +298,10 @@ class _WindowsControllerState extends State<WindowsController>
     final port = serverData.last;
     final tcpServer = TcpServer(port: port, ipAddress: ip);
 
-    final SharedPreferences prefs = await _prefs;
     _selectedServer?.closeConnection();
     if (await tcpServer.tryConnect()) {
       setState(() {
         _selectedServer = tcpServer;
-
         _selectedServerIndex =
             prefs.setInt('selectedServerIndex', index).then((bool success) {
           return index;

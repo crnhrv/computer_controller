@@ -23,7 +23,7 @@ class TcpServer {
   Future<bool> tryConnect() async {
     try {
       _socket = TcpSocketConnection(ipAddress, int.parse(port));
-      await _socket.connect(6000, () => true);
+      await _socket.connect(6000, () {});
     } catch (_) {
       return false;
     }

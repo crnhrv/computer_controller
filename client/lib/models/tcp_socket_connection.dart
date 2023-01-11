@@ -32,6 +32,10 @@ class TcpSocketConnection {
     _server!.listen((List<int> event) async {
       String received = (utf8.decode(event));
       callback(received);
+    }, onError: (Object error) {
+      _connected = false;
+    }, onDone: () {
+      _connected = false;
     });
   }
 

@@ -1,4 +1,3 @@
-
 import 'tcp_socket_connection.dart';
 
 class TcpServer {
@@ -12,16 +11,18 @@ class TcpServer {
   final String port;
   final String ipAddress;
 
-
   @override
   String toString() {
     return '$ipAddress:$port';
   }
 
+  bool isConnected() {
+    return _socket.isConnected();
+  }
+
   Future<bool> tryConnect() async {
     try {
-      _socket = TcpSocketConnection(
-          ipAddress, int.parse(port));
+      _socket = TcpSocketConnection(ipAddress, int.parse(port));
       await _socket.connect(6000, () => true);
     } catch (_) {
       return false;
@@ -39,4 +40,3 @@ class TcpServer {
     }
   }
 }
-

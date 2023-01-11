@@ -55,7 +55,7 @@ class _WindowsControllerState extends State<WindowsController>
 
   Future<void> onOpen() async {
     final SharedPreferences prefs = await _prefs;
-    if (_selectedServer != null) {
+    if (_selectedServer != null && !_selectedServer!.isConnected()) {
       if (!await _selectedServer!.tryConnect()) {
         setState(() {
           _selectedServer = null;
@@ -295,7 +295,7 @@ class _WindowsControllerState extends State<WindowsController>
 
     if (selectedServerIndex == index) {
       _selectedServer?.closeConnection();
-      
+
       setState(() {
         _selectedServer = null;
         _selectedServerIndex =

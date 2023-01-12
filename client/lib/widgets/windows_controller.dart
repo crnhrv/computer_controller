@@ -66,8 +66,8 @@ class _WindowsControllerState extends State<WindowsController>
           _selectedServer = null;
           _selectedServerIndex =
               prefs.setInt('selectedServerIndex', -1).then((bool success) {
-                return -1;
-              });
+            return -1;
+          });
         });
       }
     }
@@ -81,26 +81,31 @@ class _WindowsControllerState extends State<WindowsController>
     final SharedPreferences prefs = await _prefs;
     List<String> tcpServers = await _tcpServerMetaData;
     final String serverData = "${server.ipAddress}:${server.port}";
-    server.closeConnection();
 
     if (tcpServers.contains(serverData)) {
       return false;
     }
 
     tcpServers.add(serverData);
-
     setState(() {
-      {
-        _tcpServerMetaData =
-            prefs.setStringList('tcpServers', tcpServers).then((bool success) {
-          return tcpServers;
-        });
-      }
+      _tcpServerMetaData =
+          prefs.setStringList('tcpServers', tcpServers).then((bool success) {
+        return tcpServers;
+      });
     });
 
-    final int selectedServerIndex = await _selectedServerIndex;
-    if (selectedServerIndex == -1) {
-      _setSelectedServer(Future<int>(() => 0));
+    final serverIndex = tcpServers.length - 1;
+    if (_selectedServer == null) {
+      setState(() {
+        _selectedServer = server;
+        _selectedServerIndex = prefs
+            .setInt('selectedServerIndex', serverIndex)
+            .then((bool success) {
+          return serverIndex;
+        });
+      });
+    } else {
+      server.closeConnection();
     }
 
     return true;
@@ -276,8 +281,8 @@ class _WindowsControllerState extends State<WindowsController>
         _selectedServer = null;
         _selectedServerIndex =
             prefs.setInt('selectedServerIndex', -1).then((bool success) {
-              return -1;
-            });
+          return -1;
+        });
       });
       return;
     }
@@ -288,8 +293,8 @@ class _WindowsControllerState extends State<WindowsController>
         _selectedServer = null;
         _selectedServerIndex =
             prefs.setInt('selectedServerIndex', -1).then((bool success) {
-              return -1;
-            });
+          return -1;
+        });
       });
       return;
     }
@@ -299,8 +304,8 @@ class _WindowsControllerState extends State<WindowsController>
     final port = serverData.last;
     final tcpServer = TcpServer(port: port, ipAddress: ip);
 
-    _selectedServer?.closeConnection();
     if (await tcpServer.tryConnect()) {
+      _selectedServer?.closeConnection();
       setState(() {
         _selectedServer = tcpServer;
         _selectedServerIndex =

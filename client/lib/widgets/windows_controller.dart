@@ -81,6 +81,7 @@ class _WindowsControllerState extends State<WindowsController>
     final SharedPreferences prefs = await _prefs;
     List<String> tcpServers = await _tcpServerMetaData;
     final String serverData = "${server.ipAddress}:${server.port}";
+    server.closeConnection();
 
     if (tcpServers.contains(serverData)) {
       return false;

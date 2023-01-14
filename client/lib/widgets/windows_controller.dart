@@ -30,19 +30,10 @@ class _WindowsControllerState extends State<WindowsController>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _timer = Timer.periodic(
-        const Duration(seconds: 1), (Timer t) => _connectionHealthCheck());
-    _selectedServerIndex = _prefs.then((SharedPreferences prefs) {
-      return prefs.getInt('selectedServerIndex') ?? -1;
-    });
 
-    _tcpServerMetaData = _prefs.then((SharedPreferences prefs) {
-      return prefs.getStringList('tcpServers') ?? [];
-    });
-
-    _setSelectedServer(_selectedServerIndex);
-
-    onOpen();
+    _initHealthChecker();
+    _reloadData();
+    _trySetSelectedServer();
   }
 
   @override
@@ -54,27 +45,53 @@ class _WindowsControllerState extends State<WindowsController>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) onOpen();
-  }
-
-  Future<void> _connectionHealthCheck() async {
-    final SharedPreferences prefs = await _prefs;
-    if (_selectedServer != null && !_selectedServer!.isConnected()) {
-      if (!await _selectedServer!.tryConnect()) {
-        setState(() {
-          debugPrint("setting server to null");
-          _selectedServer = null;
-          _selectedServerIndex =
-              prefs.setInt('selectedServerIndex', -1).then((bool success) {
-            return -1;
-          });
-        });
+    if (state == AppLifecycleState.resumed) {
+      _initHealthChecker();
+      _reloadData();
+      if (_selectedServer == null) {
+        _trySetSelectedServer();
       }
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      _stopHealthChecker();
     }
   }
 
-  Future<void> onOpen() async {
-    await _connectionHealthCheck();
+  void _initHealthChecker() {
+    if (_timer == null || !_timer!.isActive) {
+      setState(() {
+        _timer = Timer.periodic(
+            const Duration(seconds: 1), (Timer t) => _connectionHealthCheck());
+      });
+    }
+  }
+
+  void _stopHealthChecker() {
+    if (_timer != null || _timer!.isActive) {
+      setState(() {
+        _timer!.cancel();
+        _timer == null;
+      });
+    }
+  }
+
+  void _reloadData() {
+    _selectedServerIndex = _prefs.then((SharedPreferences prefs) {
+      return prefs.getInt('selectedServerIndex') ?? -1;
+    });
+
+    _tcpServerMetaData = _prefs.then((SharedPreferences prefs) {
+      return prefs.getStringList('tcpServers') ?? [];
+    });
+  }
+
+  Future<void> _connectionHealthCheck() async {
+    if (_selectedServer != null && !_selectedServer!.isConnected()) {
+      if (!await _selectedServer!.tryConnect()) {
+        _unsetSelectedServer(null);
+      }
+    }
   }
 
   Future<bool> addServer(TcpServer server) async {
@@ -96,14 +113,11 @@ class _WindowsControllerState extends State<WindowsController>
 
     final serverIndex = tcpServers.length - 1;
     if (_selectedServer == null) {
-      setState(() {
-        _selectedServer = server;
-        _selectedServerIndex = prefs
-            .setInt('selectedServerIndex', serverIndex)
-            .then((bool success) {
-          return serverIndex;
-        });
+      _selectedServerIndex =
+          prefs.setInt('selectedServerIndex', serverIndex).then((bool success) {
+        return serverIndex;
       });
+      _trySetSelectedServer();
     } else {
       server.closeConnection();
     }
@@ -152,16 +166,13 @@ class _WindowsControllerState extends State<WindowsController>
     final selectedServerIndex = await _selectedServerIndex;
 
     if (selectedServerIndex == index) {
-      setState(() {
-        _selectedServer?.closeConnection();
-        _selectedServer = null;
-        _selectedServerIndex =
-            prefs.setInt('selectedServerIndex', -1).then((bool success) {
-          return -1;
-        });
-      });
+      _unsetSelectedServer(prefs);
     } else {
-      _setSelectedServer(Future<int>(() => index));
+      _selectedServerIndex =
+          prefs.setInt('selectedServerIndex', -1).then((bool success) {
+        return index;
+      });
+      _trySetSelectedServer();
     }
   }
 
@@ -273,29 +284,17 @@ class _WindowsControllerState extends State<WindowsController>
         : KeyboardControl(sendCommand: sendKeyCommand);
   }
 
-  Future<void> _setSelectedServer(Future<int> possibleIndex) async {
+  Future<void> _trySetSelectedServer() async {
     final SharedPreferences prefs = await _prefs;
-    final index = await possibleIndex;
+    final index = await _selectedServerIndex;
     if (index == -1) {
-      setState(() {
-        _selectedServer = null;
-        _selectedServerIndex =
-            prefs.setInt('selectedServerIndex', -1).then((bool success) {
-          return -1;
-        });
-      });
+      _unsetSelectedServer(prefs);
       return;
     }
 
     final metadata = await _tcpServerMetaData;
     if (metadata.isEmpty) {
-      setState(() {
-        _selectedServer = null;
-        _selectedServerIndex =
-            prefs.setInt('selectedServerIndex', -1).then((bool success) {
-          return -1;
-        });
-      });
+      _unsetSelectedServer(prefs);
       return;
     }
 
@@ -318,8 +317,8 @@ class _WindowsControllerState extends State<WindowsController>
 
   Future<void> _removeServer(int index) async {
     final SharedPreferences prefs = await _prefs;
-    final tcpServers = prefs.getStringList('tcpServers') ?? [];
-    final selectedServerIndex = prefs.getInt('selectedServerIndex');
+    final tcpServers = await _tcpServerMetaData;
+    final selectedServerIndex = await _selectedServerIndex;
     tcpServers.removeAt(index);
 
     setState(() {
@@ -330,15 +329,22 @@ class _WindowsControllerState extends State<WindowsController>
     });
 
     if (selectedServerIndex == index) {
-      _selectedServer?.closeConnection();
-
-      setState(() {
-        _selectedServer = null;
-        _selectedServerIndex =
-            prefs.setInt('selectedServerIndex', -1).then((bool success) {
-          return -1;
-        });
-      });
+      _unsetSelectedServer(prefs);
     }
+  }
+
+  Future<void> _unsetSelectedServer(SharedPreferences? prefs) async {
+    prefs ??= await _prefs;
+    if (_selectedServer != null && _selectedServer!.isConnected()) {
+      _selectedServer?.closeConnection();
+    }
+    setState(() {
+      debugPrint("setting server to null");
+      _selectedServer = null;
+      _selectedServerIndex =
+          prefs!.setInt('selectedServerIndex', -1).then((bool success) {
+        return -1;
+      });
+    });
   }
 }

@@ -3,6 +3,7 @@ import '../models/keyboard_control_mode.dart';
 
 class KeyboardControl extends StatefulWidget {
   final Function(int keyCode) sendCommand;
+
   const KeyboardControl({Key? key, required this.sendCommand})
       : super(key: key);
 
@@ -18,12 +19,13 @@ class _KeyboardControlState extends State<KeyboardControl> {
     return List<Widget>.generate(
         keys.length,
         (index) => Container(
-              width: 80,
-              height: 80,
+              width: 100,
+              height: 100,
               decoration:
                   BoxDecoration(color: color, border: Border.all(width: 1)),
               child: GestureDetector(
-                child: TextButton(
+                child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: color),
                     onPressed: () {
                       widget.sendCommand(
                           KeyboardControlMode.getKeyCode(keys[index]));
@@ -51,20 +53,22 @@ class _KeyboardControlState extends State<KeyboardControl> {
     return List<Widget>.generate(
         keys.length,
         (index) => Container(
-              width: 80,
-              height: 80,
+              width: 90,
+              height: 90,
               decoration:
                   BoxDecoration(color: color, border: Border.all(width: 1)),
               child: GestureDetector(
-                child: IconButton(
-                    iconSize: iconSize,
+                child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: color),
                     onPressed: () {
                       widget.sendCommand(
                           KeyboardControlMode.getKeyCode(keys[index]));
                     },
-                    icon: Icon(KeyboardControlMode.getIcon(
-                      (keys[index]),
-                    ))),
+                    child: Icon(
+                        size: iconSize,
+                        KeyboardControlMode.getIcon(
+                          (keys[index]),
+                        ))),
                 onLongPressStart: (_) async {
                   _isPressed = true;
                   do {

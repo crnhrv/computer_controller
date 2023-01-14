@@ -14,16 +14,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    final darkElevatedButtonTheme = ElevatedButtonThemeData(style: ButtonStyle(
-        backgroundColor:
-        MaterialStateProperty.all<Color>(Colors.deepOrange)));
+    final darkElevatedButtonTheme = ElevatedButtonThemeData(
+        style: ButtonStyle(
+            backgroundColor:
+                MaterialStateProperty.all<Color>(Colors.deepOrange)));
 
     final darkTextButtonTheme = TextButtonThemeData(
         style: ButtonStyle(
-            foregroundColor: MaterialStateProperty.resolveWith(
-                    (state) => state.any(
-                        (element) => element == MaterialState.pressed)
+            foregroundColor: MaterialStateProperty.resolveWith((state) =>
+                state.any((element) => element == MaterialState.pressed)
                     ? Colors.orange
                     : Colors.white)));
 
@@ -32,7 +31,7 @@ class MyApp extends StatelessWidget {
         home: const WindowsController(),
         theme: ThemeData.light(),
         darkTheme: ThemeData.dark().copyWith(
-            elevatedButtonTheme:darkElevatedButtonTheme,
+            elevatedButtonTheme: darkElevatedButtonTheme,
             textButtonTheme: darkTextButtonTheme));
   }
 }

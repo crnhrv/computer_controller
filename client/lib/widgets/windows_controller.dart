@@ -32,7 +32,7 @@ class _WindowsControllerState extends State<WindowsController>
     WidgetsBinding.instance.addObserver(this);
 
     _initHealthChecker();
-    _reloadData();
+    _loadData();
     _trySetSelectedServer();
   }
 
@@ -47,7 +47,7 @@ class _WindowsControllerState extends State<WindowsController>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _initHealthChecker();
-      _reloadData();
+      _loadData();
       if (_selectedServer == null) {
         _trySetSelectedServer();
       }
@@ -76,7 +76,7 @@ class _WindowsControllerState extends State<WindowsController>
     }
   }
 
-  void _reloadData() {
+  void _loadData() {
     _selectedServerIndex = _prefs.then((SharedPreferences prefs) {
       return prefs.getInt('selectedServerIndex') ?? -1;
     });

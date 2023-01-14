@@ -312,6 +312,11 @@ class _WindowsControllerState extends State<WindowsController>
           return index;
         });
       });
+    } else {
+      _selectedServerIndex =
+          prefs.setInt('selectedServerIndex', -1).then((bool success) {
+        return -1;
+      });
     }
   }
 

@@ -19,11 +19,11 @@ class WindowsController extends StatefulWidget {
 
 class _WindowsControllerState extends State<WindowsController>
     with WidgetsBindingObserver {
+  late ControlModes _controlMode = ControlModes.keyboard;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   TcpServer? _selectedServer;
-  late Future<List<String>> _tcpServerMetaData;
-  late Future<int> _selectedServerIndex;
-  late ControlModes _controlMode = ControlModes.keyboard;
+  Future<List<String>>? _tcpServerMetaData;
+  Future<int>? _selectedServerIndex;
   Timer? _timer;
 
   @override
@@ -32,7 +32,9 @@ class _WindowsControllerState extends State<WindowsController>
     WidgetsBinding.instance.addObserver(this);
 
     _initHealthChecker();
-    _loadData();
+    if (_needsReloading()) {
+      _loadData();
+    }
     _trySetSelectedServer();
   }
 
@@ -47,7 +49,9 @@ class _WindowsControllerState extends State<WindowsController>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _initHealthChecker();
-      _loadData();
+      if (_needsReloading()) {
+        _loadData();
+      }
       if (_selectedServer == null) {
         _trySetSelectedServer();
       }
@@ -77,17 +81,17 @@ class _WindowsControllerState extends State<WindowsController>
   }
 
   void _loadData() {
-    _selectedServerIndex = _prefs.then((SharedPreferences prefs) {
+    _selectedServerIndex ??= _prefs.then((SharedPreferences prefs) {
       return prefs.getInt('selectedServerIndex') ?? -1;
     });
 
-    _tcpServerMetaData = _prefs.then((SharedPreferences prefs) {
+    _tcpServerMetaData ??= _prefs.then((SharedPreferences prefs) {
       return prefs.getStringList('tcpServers') ?? [];
     });
   }
 
   Future<void> _connectionHealthCheck() async {
-    if (_selectedServer != null && !_selectedServer!.isConnected()) {
+    if (_serverIsAvailableButNotConnected()) {
       if (!await _selectedServer!.tryConnect()) {
         _unsetSelectedServer(null);
       }
@@ -96,7 +100,7 @@ class _WindowsControllerState extends State<WindowsController>
 
   Future<bool> addServer(TcpServer server) async {
     final SharedPreferences prefs = await _prefs;
-    List<String> tcpServers = await _tcpServerMetaData;
+    List<String> tcpServers = await _tcpServerMetaData ?? [];
     final String serverData = "${server.ipAddress}:${server.port}";
 
     if (tcpServers.contains(serverData)) {
@@ -177,8 +181,8 @@ class _WindowsControllerState extends State<WindowsController>
   }
 
   Future<List<Widget>> _buildServerMenu() async {
-    final tcpServerMetaData = await _tcpServerMetaData;
-    final selectedServerIndex = await _selectedServerIndex;
+    final tcpServerMetaData = await _tcpServerMetaData ?? [];
+    final selectedServerIndex = await _selectedServerIndex ?? -1;
 
     List<Widget> menu = List<Widget>.generate(
         tcpServerMetaData.length,
@@ -262,7 +266,7 @@ class _WindowsControllerState extends State<WindowsController>
   }
 
   Future<String> _getTitleText() async {
-    final tcpServers = await _tcpServerMetaData;
+    final tcpServers = await _tcpServerMetaData ?? [];
 
     return tcpServers.isEmpty
         ? "No servers available"
@@ -286,13 +290,13 @@ class _WindowsControllerState extends State<WindowsController>
 
   Future<void> _trySetSelectedServer() async {
     final SharedPreferences prefs = await _prefs;
-    final index = await _selectedServerIndex;
+    final index = await _selectedServerIndex ?? -1;
     if (index == -1) {
       _unsetSelectedServer(prefs);
       return;
     }
 
-    final metadata = await _tcpServerMetaData;
+    final metadata = await _tcpServerMetaData ?? [];
     if (metadata.isEmpty) {
       _unsetSelectedServer(prefs);
       return;
@@ -313,17 +317,19 @@ class _WindowsControllerState extends State<WindowsController>
         });
       });
     } else {
-      _selectedServerIndex =
-          prefs.setInt('selectedServerIndex', -1).then((bool success) {
-        return -1;
+      setState(() {
+        _selectedServerIndex =
+            prefs.setInt('selectedServerIndex', -1).then((bool success) {
+          return -1;
+        });
       });
     }
   }
 
   Future<void> _removeServer(int index) async {
     final SharedPreferences prefs = await _prefs;
-    final tcpServers = await _tcpServerMetaData;
-    final selectedServerIndex = await _selectedServerIndex;
+    final tcpServers = await _tcpServerMetaData ?? [];
+    final selectedServerIndex = await _selectedServerIndex ?? -1;
     tcpServers.removeAt(index);
 
     setState(() {
@@ -339,17 +345,28 @@ class _WindowsControllerState extends State<WindowsController>
   }
 
   Future<void> _unsetSelectedServer(SharedPreferences? prefs) async {
+    if (_selectedServer == null) {
+      return;
+    }
+
     prefs ??= await _prefs;
     if (_selectedServer != null && _selectedServer!.isConnected()) {
       _selectedServer?.closeConnection();
     }
     setState(() {
-      debugPrint("setting server to null");
       _selectedServer = null;
       _selectedServerIndex =
           prefs!.setInt('selectedServerIndex', -1).then((bool success) {
         return -1;
       });
     });
+  }
+
+  bool _serverIsAvailableButNotConnected() {
+    return _selectedServer != null && !_selectedServer!.isConnected();
+  }
+
+  bool _needsReloading() {
+    return _selectedServer == null && _selectedServerIndex == null;
   }
 }

@@ -8,7 +8,6 @@ class TcpSocketConnection {
   Socket? _server;
   bool _connected = false;
 
-
   TcpSocketConnection(String ip, int port) {
     _ipAddress = ip;
     _portAddress = port;

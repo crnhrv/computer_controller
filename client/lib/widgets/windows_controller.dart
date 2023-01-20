@@ -64,19 +64,15 @@ class _WindowsControllerState extends State<WindowsController>
 
   void _initHealthChecker() {
     if (_timer == null || !_timer!.isActive) {
-      setState(() {
-        _timer = Timer.periodic(
-            const Duration(seconds: 1), (Timer t) => _connectionHealthCheck());
-      });
+      _timer = Timer.periodic(
+          const Duration(seconds: 1), (Timer t) => _connectionHealthCheck());
     }
   }
 
   void _stopHealthChecker() {
     if (_timer != null || _timer!.isActive) {
-      setState(() {
-        _timer!.cancel();
-        _timer == null;
-      });
+      _timer!.cancel();
+      _timer == null;
     }
   }
 
@@ -317,12 +313,14 @@ class _WindowsControllerState extends State<WindowsController>
         });
       });
     } else {
-      setState(() {
-        _selectedServerIndex =
-            prefs.setInt('selectedServerIndex', -1).then((bool success) {
-          return -1;
+      if (await _selectedServerIndex != -1) {
+        setState(() {
+          _selectedServerIndex =
+              prefs.setInt('selectedServerIndex', -1).then((bool success) {
+            return -1;
+          });
         });
-      });
+      }
     }
   }
 

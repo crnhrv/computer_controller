@@ -34,8 +34,10 @@ class TcpServer {
     _socket.disconnect();
   }
 
-  void trySend(List<int> command) {
+  Future<void> trySend(List<int> command) async {
     if (_socket.isConnected()) {
+      _socket.sendBytes(command);
+    } else if (await tryConnect()) {
       _socket.sendBytes(command);
     }
   }

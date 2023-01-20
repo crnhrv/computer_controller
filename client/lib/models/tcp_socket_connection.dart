@@ -54,6 +54,7 @@ class TcpSocketConnection {
   void sendBytes(List<int> message) async {
     if (_server != null && _connected) {
       _server!.add(message);
+      await _server!.flush();
     }
   }
 

@@ -169,7 +169,7 @@ class _WindowsControllerState extends State<WindowsController>
       _unsetSelectedServer(prefs);
     } else {
       _selectedServerIndex =
-          prefs.setInt('selectedServerIndex', -1).then((bool success) {
+          prefs.setInt('selectedServerIndex', index).then((bool success) {
         return index;
       });
       _trySetSelectedServer();

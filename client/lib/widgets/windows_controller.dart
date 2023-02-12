@@ -48,13 +48,13 @@ class _WindowsControllerState extends State<WindowsController>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _initHealthChecker();
       if (_needsReloading()) {
         _loadData();
       }
       if (_selectedServer == null) {
         _trySetSelectedServer();
       }
+      _initHealthChecker();
     }
 
     if (state == AppLifecycleState.inactive) {

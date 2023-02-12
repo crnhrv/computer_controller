@@ -6,6 +6,9 @@ class TcpServer {
     required this.ipAddress,
   });
 
+  static final Finalizer<TcpSocketConnection> _finalizer =
+  Finalizer((connection) => connection.disconnect());
+
   late TcpSocketConnection _socket;
 
   final String port;
@@ -23,6 +26,7 @@ class TcpServer {
   Future<bool> tryConnect() async {
     try {
       _socket = TcpSocketConnection(ipAddress, int.parse(port));
+      _finalizer.attach(this, _socket, detach: this);
       await _socket.connect(6000, () {});
     } catch (_) {
       return false;
@@ -32,6 +36,7 @@ class TcpServer {
 
   void closeConnection() {
     _socket.disconnect();
+    _finalizer.detach(this);
   }
 
   Future<void> trySend(List<int> command) async {

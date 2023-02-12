@@ -53,6 +53,16 @@ impl WindowsControlHandler {
             let payload_size: usize = header.size as usize;
             let _payload_buf = vec![0u8; payload_size];
 
+            // currently we don't support anything but a single key input
+            // but we don't want to stall if we get more
+            if payload_size != 1 {
+                println!("RECEIVED MALFORMED COMMAND");
+                let mut payload_buf = vec![0u8; payload_size];
+                println!("READING {} bytes", payload_size);
+                buf_reader.read_exact(&mut payload_buf)?;
+                println!("finished reading");
+                continue;
+            }
             match header.mode {
                 WindowsControlMode::Keypress => {
                     let key = buf_reader.read_u8()?;

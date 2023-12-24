@@ -2,22 +2,22 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:windows_controller/widgets/create_server_dialog.dart';
-import 'package:windows_controller/widgets/keyboard_control.dart';
-import 'package:windows_controller/widgets/mouse_control.dart';
+import 'package:computer_controller/widgets/create_server_dialog.dart';
+import 'package:computer_controller/widgets/keyboard_control.dart';
+import 'package:computer_controller/widgets/mouse_control.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/control_modes.dart';
 import '../models/tcp_server.dart';
 
-class WindowsController extends StatefulWidget {
-  const WindowsController({super.key});
+class ComputerController extends StatefulWidget {
+  const ComputerController({super.key});
 
   @override
-  State<WindowsController> createState() => _WindowsControllerState();
+  State<ComputerController> createState() => _ComputerControllerState();
 }
 
-class _WindowsControllerState extends State<WindowsController>
+class _ComputerControllerState extends State<ComputerController>
     with WidgetsBindingObserver {
   late ControlModes _controlMode = ControlModes.keyboard;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();

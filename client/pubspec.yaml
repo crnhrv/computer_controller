@@ -1,5 +1,5 @@
-name: windows_controller
-description: A simple way to send device usage commands to Windows
+name: computer_controller
+description: A simple way to send device usage commands to a computer 
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 

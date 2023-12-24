@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:windows_controller/widgets/windows_controller.dart';
+import 'package:computer_controller/widgets/computer_controller.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,8 +27,8 @@ class MyApp extends StatelessWidget {
                     : Colors.white)));
 
     return MaterialApp(
-        title: 'Windows Controller',
-        home: const WindowsController(),
+        title: 'Computer Controller',
+        home: const ComputerController(),
         theme: ThemeData.light(),
         darkTheme: ThemeData.dark().copyWith(
             elevatedButtonTheme: darkElevatedButtonTheme,

@@ -1,4 +1,4 @@
-### Windows Controller
+### Computer Controller
 
 A basic client (cross platform built with Flutter, with a focus on Android app), and server (Rust), which allow a user to send keyboard events over TCP to control a Windows or MacOS machine.
 

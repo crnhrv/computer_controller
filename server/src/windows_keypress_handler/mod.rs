@@ -1,6 +1,6 @@
 use std::mem::size_of;
 use std::os::raw::c_int;
-use std::error::Error,
+use std::error::Error;
 
 use winapi::shared::minwindef::WORD;
 use winapi::um::winuser::{
@@ -21,7 +21,7 @@ impl WindowsKeypressHandler {
         Ok(())
     }
 
-    fn send_input(&self, flags: u32, key: u8) -> Result<(), Box<dyn Erorr>> {
+    fn send_input(&self, flags: u32, key: u8) -> Result<(), Box<dyn Error>> {
         let keybd = KEYBDINPUT {
             wVk: key as WORD,
             wScan: 0,
@@ -43,6 +43,8 @@ impl WindowsKeypressHandler {
 
 
         unsafe { SendInput(1, &mut input as LPINPUT, size_of::<INPUT>() as c_int) };
+
+        Ok(())
     }
 }
 

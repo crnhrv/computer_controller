@@ -3,7 +3,14 @@ extern crate core;
 use clap::Parser;
 
 pub mod tcp_server;
-pub mod windows_control_handler;
+
+#[cfg(target_os = "windows")]
+pub mod windows_keypress_handler;
+
+#[cfg(target_os = "macos")]
+pub mod macos_keypress_handler;
+
+pub mod control_handler;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
